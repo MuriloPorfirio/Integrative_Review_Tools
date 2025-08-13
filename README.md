@@ -13,10 +13,9 @@ These scripts are released under a NonCommercial-Attribution license — you may
 
 | File Name | Type | Description | When to Use in an Integrative Review |
 |-----------|------|-------------|--------------------------------------|
-| **`rayyan-duplicate-remover.html`** | HTML (Browser) | Removes exact duplicates from CSVs exported from Rayyan. Works entirely in the browser, no installation needed. | Use before screening to clean obvious duplicate records quickly. |
 | **`rayyan-keyword-filter.html`** | HTML (Browser) | Filters articles based on a list of desired keywords found in title, abstract, or keywords columns. | Use when you want to pre-filter articles by topic before screening. |
 | **`rayyan-mandatory-keywords-filter.html`** | HTML (Browser) | Keeps only articles containing all mandatory keywords you specify. | Use when refining your dataset to a very specific research question. |
-| **`rayyan-duplicate-remover.py`** | Python | Removes duplicates from Rayyan CSV files with advanced strategies (title variations, abstract checks). Splits large outputs into ≤90MB files for re-upload. | Use when you need batch duplicate removal beyond simple exact matches. |
+| **`rayyan-duplicate-remover.py`** | Python | Removes duplicates from Rayyan CSV files with advanced strategies (title variations and optional abstract checks). Splits large outputs into up to 90 MB parts for re-upload. | Use early in the process to batch‑remove duplicates beyond simple exact matches. |
 
 ## License
 
@@ -34,11 +33,11 @@ Read the full license in [`LICENSE.txt`](LICENSE.txt).
 ## Requirements
 
 ### For HTML Scripts
-- Any modern web browser (Chrome, Firefox, Edge, etc.)
+- Any modern web browser (Chrome, Firefox, Edge, etc.).
 - No installation or dependencies required.
-- CSV files exported from Rayyan with `title`, `abstract`, and `keywords` columns.
+- CSV files exported from Rayyan with the columns `title`, `abstract`, and `keywords` (lowercase, as exported by Rayyan).
 
-### For Python Scripts
+### For Python Script
 - Python 3.8+
 - Required Python packages:
   ```bash
@@ -46,19 +45,18 @@ Read the full license in [`LICENSE.txt`](LICENSE.txt).
   ```
 - Optional (for GUI file picker):
   - `tkinter` (usually included with Python)
+- CSV files exported from Rayyan. At minimum, the script expects `title`; if `abstract` exists it will also be used.
 
 ## How to Use
 
 ### 1. HTML Scripts
 1. Download the `.html` file you want to use.
-2. Open it in your browser (double-click or right-click → "Open with Browser").
+2. Open it in your browser (double-click or right-click → Open with Browser).
 3. Follow the on-screen instructions.
 4. The processed CSV(s) will download automatically.
 
-Example: Using `rayyan-duplicate-remover.html`
-- Step 1: Select your exported Rayyan CSV file.
-- Step 2: The script removes exact duplicates.
-- Step 3: Download the cleaned CSV file.
+- `rayyan-keyword-filter.html`: keeps records containing any of the provided keywords in title, abstract, or keywords.  
+- `rayyan-mandatory-keywords-filter.html`: keeps records only if all provided keywords are present in at least one of the three fields.
 
 ### 2. Python Script
 1. Install Python and required libraries:
@@ -72,25 +70,28 @@ Example: Using `rayyan-duplicate-remover.html`
 3. Use the file picker to select one or more Rayyan CSVs.
 4. The script will:
    - Merge all files.
-   - Apply multiple duplicate-removal strategies.
-   - Split the output into ≤90MB files.
+   - Remove exact duplicates by title.
+   - Remove near-duplicates by comparing title variants (removing first, last, second, and middle words).
+   - Optionally remove duplicates by abstract if an `abstract` column exists.
+   - Split the output into files of up to 90 MB for re-upload to Rayyan.
 
 ## Possible Issues
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| Script says column not found | Your CSV does not have the required `title`, `abstract`, or `keywords` column. | Re-export from Rayyan ensuring these fields are included. |
+| Column not found | Your CSV does not have the required `title`, `abstract`, or `keywords` column. | Re-export from Rayyan ensuring these fields are included. |
 | Output file not downloading (HTML) | Browser blocked automatic download. | Use the manual download button shown at the end. |
-| Encoding errors in Python script | Special characters in CSV (e.g., accents, symbols). | Try re-exporting CSV with UTF-8 encoding. |
-| Tkinter error in Python | `tkinter` not installed. | Install it via your OS package manager (Linux) or reinstall Python with Tcl/Tk support. |
+| Encoding errors (Python) | Special characters in CSV (e.g., accents, symbols). | Re-export CSV with UTF-8 encoding. |
+| Tkinter error (Python) | `tkinter` not installed or missing GUI backend. | Install via OS package manager or reinstall Python with Tcl/Tk support. |
+| Very large datasets slow to process | Browser or Python memory limits. | Run the Python deduplicator first to reduce the dataset, then apply HTML filters. |
 
 ## Recommended Workflow for an Integrative Review
 
-1. Export dataset from Rayyan (all articles, including duplicates).
-2. Run `rayyan-duplicate-remover.html` to clean exact duplicates.
+1. Export the full dataset from Rayyan (all articles, with duplicates).
+2. Run `rayyan-duplicate-remover.py` to clean duplicates and split into manageable files.
 3. Run `rayyan-keyword-filter.html` to pre-filter by topic (optional).
 4. Run `rayyan-mandatory-keywords-filter.html` to narrow to highly relevant papers.
-5. Re-import cleaned dataset into Rayyan for final screening.
+5. Re-import cleaned dataset into Rayyan for title/abstract screening and full-text review.
 
 ## Authors
 - Murilo Porfírio
@@ -105,6 +106,6 @@ Porfírio, M., Hailer, J., & Ferreira, J. (2025). Rayyan Tools for Integrative R
 ```
 
 ## Notes
-- These scripts do not use similarity percentages — they focus on exact or rule-based duplicate detection.
-- HTML scripts run entirely locally in your browser — your data never leaves your computer.
-- Large datasets are automatically split to respect Rayyan's 100MB upload limit.
+- These tools do not use similarity percentages; they rely on exact or rule-based detection and keyword matching.
+- HTML scripts run entirely locally in your browser; data is not uploaded anywhere.
+- Large datasets are automatically split to respect Rayyan's approximate 100 MB upload limit.
