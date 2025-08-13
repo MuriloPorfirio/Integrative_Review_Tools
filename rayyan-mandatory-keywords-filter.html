@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rayyan CSV – Mandatory Keywords Filter</title>
+  <style>
+    :root { --accent:#2563eb; --ok:#16a34a; --warn:#b45309; --bg:#0b1020; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; line-height: 1.5; margin: 0; color: #111; }
+    header { padding: 24px 16px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; }
+    header h1 { margin: 0 0 8px; font-size: 24px; }
+    header p { margin: 4px 0; max-width: 1000px; }
+    .container { padding: 16px; max-width: 1200px; margin: 0 auto; }
+    .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin: 12px 0; }
+    .muted { color:#475569 }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#f1f5f9; border:1px solid #e2e8f0; padding:2px 6px; border-radius:6px }
+    button { cursor:pointer; appearance:none; border:1px solid #d1d5db; background:white; border-radius:10px; padding:10px 14px; font-weight:600; }
+    button.primary { background: var(--accent); color:white; border-color: transparent; }
+    button.success { background: var(--ok); color:white; border-color: transparent; }
+    button:disabled { opacity:.6; cursor:not-allowed }
+    textarea, input[type="file"] { width: 100%; max-width: 700px; }
+    textarea { border:1px solid #d1d5db; border-radius: 10px; padding: 10px; }
+    .row { display:flex; gap:12px; flex-wrap: wrap; align-items: center; }
+
+    #loader { display:none; }
+    #progressBar { width: 100%; background-color: #f3f3f3; border: 1px solid #000; border-radius:8px; overflow:hidden; }
+    #progressBarFill { width: 0%; height: 26px; background-color: #4CAF50; text-align:center; line-height: 26px; color: white; font-weight:700; }
+
+    table { margin-top: 10px; border-collapse: collapse; width: 400px; max-width: 90%; }
+    table, th, td { border: 1px solid #cbd5e1; }
+    th, td { padding: 8px; text-align: center; }
+    footer { padding: 16px; color:#64748b; font-size: 12px; }
+    #errorMessage { color: #b91c1c; display:none; }
+    #downloadButton { display:none; }
+
+    .step { display:none }
+    .step.active { display:block }
+    .list { margin:8px 0 0 16px }
+    .note { background:#fff7ed; border:1px solid #fde68a; padding:10px 12px; border-radius:10px; }
+    .tip { background:#ecfeff; border:1px solid #67e8f9; padding:10px 12px; border-radius:10px; }
+    code { background:#f1f5f9; border:1px solid #e2e8f0; padding:2px 6px; border-radius:6px }
+  </style>
+</head>
+<body>
+  <header class="card">
+    <h1>Rayyan CSV – Mandatory Keywords Filter (Integrative Review helper)</h1>
+    <p class="muted">This single‑file HTML tool helps you keep only the articles that contain <strong>all the required (mandatory) keywords</strong> in <em>title</em>, <em>abstract</em>, or <em>keywords</em>. It runs locally in your browser—no server, no data upload.</p>
+  </header>
+
+  <div class="container">
+    <div id="step1" class="step active card">
+      <h2>What this script is, what it’s for, and when to use it (Integrative Review)</h2>
+      <p>
+        This tool supports the <strong>screening phase of an Integrative Review</strong> (and similar evidence syntheses). Use it when you have exported a set of citations from <strong>Rayyan</strong> as a CSV and you want to <strong>retain only the records that include specific, mandatory concepts</strong> (e.g., <em>“cancer, immunotherapy, treatment”</em>) anywhere in <code>title</code>, <code>abstract</code>, or <code>keywords</code>.
+      </p>
+      <div class="card">
+        <h3>Typical use cases</h3>
+        <ul class="list">
+          <li>Operationalizing inclusion criteria based on core concepts.</li>
+          <li>Rapidly narrowing a large set to records that must mention all key terms.</li>
+          <li>Generating a smaller CSV to re‑import into Rayyan or to proceed with full‑text screening.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Requirements</h3>
+        <ul class="list">
+          <li>Export a CSV from Rayyan after resolving duplicates.</li>
+          <li><strong>The CSV must include the columns</strong>: <code>abstract</code>, <code>title</code>, and <code>keywords</code> (lowercase, as exported by Rayyan).</li>
+          <li>File size: if the filtered result exceeds ~80 MB, it will be split automatically.</li>
+        </ul>
+      </div>
+      <div class="tip">
+        <strong>How matching works:</strong> case‑insensitive, substring match; <em>all</em> mandatory terms must appear in at least one of the three fields. Example: entering <code>cancer, immunotherapy</code> keeps records where both terms are found.
+      </div>
+      <div class="note" style="margin-top:10px">
+        <strong>Privacy:</strong> everything runs locally in your browser (no internet calls). Feel free to disconnect from the internet while using it.
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" onclick="nextStep(2)">I read and understand — continue</button>
+      </div>
+    </div>
+
+    <div id="step2" class="step card">
+      <h2>Select your Rayyan CSV</h2>
+      <p>Choose the CSV exported from Rayyan (ensure it has <code>abstract</code>, <code>title</code>, <code>keywords</code> columns).</p>
+      <div class="row">
+        <input type="file" id="csvFileInput" accept=".csv" />
+        <button class="primary" onclick="processCSV()">I selected the file</button>
+        <button onclick="backTo(1)">Back</button>
+      </div>
+      <p id="fileHint" class="muted"></p>
+    </div>
+
+    <div id="step3" class="step card">
+      <h2>Enter the <em>mandatory</em> keywords</h2>
+      <p>Type the words/phrases that <strong>must</strong> appear (comma‑separated), for example: <code>cancer, immunotherapy, treatment</code>.</p>
+      <textarea id="mandatoryWords" rows="5" placeholder="e.g., cancer, immunotherapy, treatment"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="success" onclick="filterArticles()">Run filter</button>
+        <button onclick="backTo(2)">Back</button>
+      </div>
+      <p class="muted" style="margin-top:8px">Tip: Matching is substring‑based (e.g., <code>therap</code> matches <code>therapy</code>). Consider choosing full terms to avoid false positives.</p>
+    </div>
+
+    <div id="loader" class="card">
+      <h2>Processing…</h2>
+      <div id="progressBar">
+        <div id="progressBarFill">0%</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Current Row</th>
+            <th>% Complete</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="currentLine">0</td>
+            <td id="percentageComplete">0%</td>
+          </tr>
+        </tbody>
+      </table>
+      <p id="errorMessage"></p>
+      <button id="downloadButton" onclick="manualDownload()">Click here to download files manually</button>
+    </div>
+
+    <footer>
+      Authors: Murilo Porfírio, Julia Hailer, and Jéssica Ferreira
+    </footer>
+  </div>
+
+  <script>
+    // === Global state ===
+    let csvData = null;
+    let mandatoryWords = [];
+    let filteredCSV = [];
+    const MAX_FILE_SIZE = 80 * 1024 * 1024; // 80MB
+
+    // === Navigation helpers ===
+    function showStep(n) {
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      const el = document.getElementById('step' + n);
+      if (el) el.classList.add('active');
+      document.getElementById('loader').style.display = (n === 'loader') ? 'block' : 'none';
+    }
+    window.nextStep = function(n){ showStep(n); };
+    window.backTo = function(n){ showStep(n); };
+
+    // === CSV reading ===
+    window.processCSV = function () {
+      const input = document.getElementById('csvFileInput');
+      const file = input.files && input.files[0];
+      if (!file) { alert('Please select a CSV file.'); return; }
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        try {
+          const raw = event.target.result; // As text
+          // Split into lines, then split by commas preserving quoted segments
+          csvData = raw.split(/\r?\n/).filter(Boolean).map(row => row.split(/,(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/));
+          document.getElementById('fileHint').textContent = `${file.name} • ${csvData.length - 1} data rows detected.`;
+          nextStep(3);
+        } catch (error) {
+          handleError('Error loading the CSV file.', error);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // === Filtering ===
+    window.filterArticles = function () {
+      try {
+        const rawInput = document.getElementById('mandatoryWords').value.trim();
+        if (!rawInput) { alert('Please enter at least one mandatory keyword.'); return; }
+        mandatoryWords = rawInput.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+
+        const headers = csvData[0];
+        const abstractIndex = headers.indexOf('abstract');
+        const titleIndex = headers.indexOf('title');
+        const keywordsIndex = headers.indexOf('keywords');
+        if (abstractIndex === -1 || titleIndex === -1 || keywordsIndex === -1) {
+          throw new Error("Columns 'abstract', 'title', or 'keywords' were not found in the CSV header.");
+        }
+
+        filteredCSV = [headers];
+        const totalRows = csvData.length - 1; let processedRows = 0;
+
+        // Show loader UI
+        document.getElementById('loader').style.display = 'block';
+        showStep('loader');
+
+        for (let i = 1; i < csvData.length; i++) {
+          const row = csvData[i];
+          const abs = (row[abstractIndex] || '').toLowerCase().replace(/[\r\n]+/g, ' ').trim();
+          const tit = (row[titleIndex] || '').toLowerCase().replace(/[\r\n]+/g, ' ').trim();
+          const key = (row[keywordsIndex] || '').toLowerCase().replace(/[\r\n]+/g, ' ').trim();
+
+          const include = mandatoryWords.every(word => abs.includes(word) || tit.includes(word) || key.includes(word));
+          if (include) filteredCSV.push(row);
+
+          processedRows++;
+          const pct = ((processedRows / totalRows) * 100).toFixed(2);
+          updateProgress(i, pct);
+        }
+
+        saveFilteredCSV();
+      } catch (error) {
+        handleError('Error processing the CSV.', error);
+      }
+    }
+
+    // === Progress & UI helpers ===
+    window.updateProgress = function (line, percentage) {
+      document.getElementById('currentLine').innerText = line;
+      document.getElementById('percentageComplete').innerText = `${percentage}%`;
+      const bar = document.getElementById('progressBarFill');
+      bar.style.width = `${percentage}%`; bar.innerText = `${percentage}%`;
+    }
+
+    // === Save & download ===
+    window.saveFilteredCSV = function () {
+      try {
+        let partSize = 0, partCounter = 1, partData = [];
+        for (let i = 0; i < filteredCSV.length; i++) {
+          const row = filteredCSV[i].join(',') + "\n";
+          const byteLength = new Blob([row], { type: 'text/csv' }).size;
+          if (partSize + byteLength > MAX_FILE_SIZE) {
+            const partBlob = new Blob([partData.join('')], { type: 'text/csv;charset=utf-8;' });
+            downloadBlob(partBlob, `filtered_articles_part_${partCounter}.csv`);
+            partData = []; partSize = 0; partCounter++;
+          }
+          partData.push(row); partSize += byteLength;
+        }
+        if (partData.length > 0) {
+          const partBlob = new Blob([partData.join('')], { type: 'text/csv;charset=utf-8;' });
+          downloadBlob(partBlob, `filtered_articles_part_${partCounter}.csv`);
+        }
+
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('downloadButton').style.display = 'block';
+        alert('Done! Downloads should start automatically.');
+      } catch (error) {
+        handleError('Error saving the file.', error);
+      }
+    }
+
+    window.downloadBlob = function (blob, filename) {
+      try {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename; link.click();
+        URL.revokeObjectURL(link.href);
+        console.log(`${filename} downloaded.`);
+      } catch (error) { handleError('Error downloading the file.', error); }
+    }
+
+    window.handleError = function (message, error) {
+      console.error(`${message}:`, error);
+      const el = document.getElementById('errorMessage');
+      el.innerText = `${message}: ${error.message}`; el.style.display = 'block';
+      alert(`${message}\n${error.message}`);
+    }
+
+    window.manualDownload = function () {
+      try { saveFilteredCSV(); } 
+      catch (error) { handleError('Error attempting manual download.', error); }
+    }
+  </script>
+</body>
+</html>
