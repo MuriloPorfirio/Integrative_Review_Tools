@@ -1,0 +1,33 @@
+LICENSE
+
+Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+
+You are free to:
+
+Share — copy and redistribute the material in any medium or format.
+
+Adapt — remix, transform, and build upon the material.
+
+The licensor cannot revoke these freedoms as long as you follow the license terms.
+
+Under the following terms:
+
+Attribution — You must give appropriate credit, provide a link to the original publication, and indicate if changes were made.
+
+Example: "Script originally developed by [Author Names] for [Article Title, Journal, Year]."
+
+NonCommercial — You may not use the material for commercial purposes.
+
+“Commercial purposes” means use that is primarily intended for or directed toward commercial advantage or monetary compensation.
+
+No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+
+Notices:
+
+This license does not affect any patent rights that may exist.
+
+This license is provided “as is”, without warranties or conditions of any kind, either express or implied.
+
+Reference:
+This license is based on the Creative Commons Attribution-NonCommercial 4.0 International License.
+Full text available at: https://creativecommons.org/licenses/by-nc/4.0/legalcode
